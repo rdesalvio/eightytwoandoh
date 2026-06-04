@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<rect width="64" height="64" rx="14" fill="#0a0e16" />
+	<rect x="3" y="3" width="58" height="58" rx="12" fill="none" stroke="#3ae1ff" stroke-width="2" opacity="0.5" />
+	<text x="32" y="38" font-family="system-ui, sans-serif" font-size="22" font-weight="800"
+		fill="#3ae1ff" text-anchor="middle" letter-spacing="-1">82</text>
+	<text x="32" y="52" font-family="system-ui, sans-serif" font-size="9" font-weight="700"
+		fill="#ffd166" text-anchor="middle" letter-spacing="1">AND OH</text>
+</svg>

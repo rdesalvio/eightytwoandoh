@@ -1,0 +1,18 @@
+# data pipeline
+pipeline/data/raw/
+
+# node / sveltekit
+node_modules/
+.svelte-kit/
+build/
+.vercel/
+.wrangler/
+dist/
+
+# misc
+.DS_Store
+*.tmp
+*.log
+.env
+.env.*
+*:Zone.Identifier
