@@ -23,6 +23,7 @@
 		['all', 'All-Time'],
 		['original-six', 'Original Six'],
 		['dead-puck', 'Dead Puck'],
+		['salary-cap', 'Salary Cap'],
 		['decade', 'Decade'],
 		['franchise', 'Franchise']
 	];

@@ -38,6 +38,10 @@
 		theme = { id: sp.get('theme') || 'all', value: sp.get('value') || undefined };
 	}
 
+	// hide a skip when the theme already fixes that dimension (nothing to re-roll)
+	const showFranchiseSkip = !daily && theme.id !== 'franchise';
+	const showEraSkip = !daily && theme.id !== 'decade';
+
 	// --- state ----------------------------------------------------------------
 	let roster = $state(Array(6).fill(null));
 	let pickNum = $state(0);
@@ -166,14 +170,18 @@
 	</div>
 
 	{#if phase === 'pick'}
-		{#if !daily}
+		{#if showFranchiseSkip || showEraSkip}
 			<div class="skips">
-				<button class="btn sm ghost" disabled={!canFranchise} onclick={() => reroll('franchise')}>
-					↻ New franchise{usedSkips.franchise ? ' ✓' : ''}
-				</button>
-				<button class="btn sm ghost" disabled={!canEra} onclick={() => reroll('era')}>
-					↻ New era{usedSkips.era ? ' ✓' : ''}
-				</button>
+				{#if showFranchiseSkip}
+					<button class="btn sm ghost" disabled={!canFranchise} onclick={() => reroll('franchise')}>
+						↻ New franchise{usedSkips.franchise ? ' ✓' : ''}
+					</button>
+				{/if}
+				{#if showEraSkip}
+					<button class="btn sm ghost" disabled={!canEra} onclick={() => reroll('era')}>
+						↻ New era{usedSkips.era ? ' ✓' : ''}
+					</button>
+				{/if}
 			</div>
 		{/if}
 		<PlayerPick roll={activeRoll} open={openGroups} {infoMode} onpick={pick} />

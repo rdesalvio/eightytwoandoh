@@ -69,11 +69,13 @@ export function todayKey(d = new Date()) {
 const ORIGINAL_SIX = new Set(['MTL', 'TOR', 'BOS', 'NYR', 'CHI', 'DET']);
 const O6_DECADES = new Set(['1940s', '1950s', '1960s']);
 const DEAD_PUCK = new Set(['1990s', '2000s']);
+const CAP_DECADES = new Set(['2000s', '2010s', '2020s']); // salary-cap era (2005-06+)
 
 export const THEMES = [
 	{ id: 'all', name: 'All-Time', blurb: 'The full sweep of NHL history, 1929-30 to today.' },
 	{ id: 'original-six', name: 'Original Six', blurb: 'Just MTL, TOR, BOS, NYR, CHI, DET — the 1942-67 era.' },
 	{ id: 'dead-puck', name: 'Dead Puck Era', blurb: 'The low-scoring clutch-and-grab 1990s–2000s.' },
+	{ id: 'salary-cap', name: 'Salary Cap', blurb: 'The modern cap era — 2005-06 to today.' },
 	{ id: 'decade', name: 'Single Decade', blurb: 'Lock the whole draft to one decade.' },
 	{ id: 'franchise', name: 'One Franchise', blurb: 'Build entirely from a single team’s history.' }
 ];
@@ -83,6 +85,7 @@ export function themeFilter(theme) {
 	if (!theme || theme.id === 'all') return () => true;
 	if (theme.id === 'original-six') return ([t, d]) => ORIGINAL_SIX.has(t) && O6_DECADES.has(d);
 	if (theme.id === 'dead-puck') return ([, d]) => DEAD_PUCK.has(d);
+	if (theme.id === 'salary-cap') return ([, d]) => CAP_DECADES.has(d);
 	if (theme.id === 'decade') return ([, d]) => d === theme.value;
 	if (theme.id === 'franchise') return ([t]) => t === theme.value;
 	return () => true;
@@ -151,10 +154,11 @@ export function dailyRng(key) {
 export function pickDailyTheme(rng) {
 	const r = rng();
 	let theme;
-	if (r < 0.34) theme = { id: 'all', name: 'All-Time' };
-	else if (r < 0.5) theme = { id: 'original-six', name: 'Original Six' };
-	else if (r < 0.62) theme = { id: 'dead-puck', name: 'Dead Puck Era' };
-	else if (r < 0.8) {
+	if (r < 0.3) theme = { id: 'all', name: 'All-Time' };
+	else if (r < 0.44) theme = { id: 'original-six', name: 'Original Six' };
+	else if (r < 0.56) theme = { id: 'dead-puck', name: 'Dead Puck Era' };
+	else if (r < 0.68) theme = { id: 'salary-cap', name: 'Salary Cap Era' };
+	else if (r < 0.84) {
 		const d = decades[Math.floor(rng() * decades.length)];
 		theme = { id: 'decade', value: d, name: `The ${d}` };
 	} else {
