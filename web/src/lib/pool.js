@@ -129,6 +129,68 @@ export function roll(openGroups, theme, rng = Math.random, extra = null, taken =
 	return rollFromKey(team, decade, taken);
 }
 
+// --- daily challenge ------------------------------------------------------
+/** Valid (team,decade) keys (under a theme) that hold a player in EVERY group. */
+export function validRollKeysAll(groups, theme) {
+	const ok = themeFilter(theme);
+	return allKeys.filter((k) => {
+		if (!ok(k)) return false;
+		const td = byTD.get(`${k[0]}|${k[1]}`);
+		return groups.every((g) => td[g].length > 0);
+	});
+}
+
+/** Seeded RNG for a daily/challenge — identical for everyone on a given key
+ *  (defaults to today's UTC date). */
+export function dailyRng(key) {
+	return mulberry32(hashSeed('e82o|' + (key ?? todayKey())));
+}
+
+/** Today's themed constraint (seeded). Falls back to All-Time if a theme can't
+ *  field a full roster. Consumes 1-2 draws from `rng`. */
+export function pickDailyTheme(rng) {
+	const r = rng();
+	let theme;
+	if (r < 0.34) theme = { id: 'all', name: 'All-Time' };
+	else if (r < 0.5) theme = { id: 'original-six', name: 'Original Six' };
+	else if (r < 0.62) theme = { id: 'dead-puck', name: 'Dead Puck Era' };
+	else if (r < 0.8) {
+		const d = decades[Math.floor(rng() * decades.length)];
+		theme = { id: 'decade', value: d, name: `The ${d}` };
+	} else {
+		const storied = ['MTL', 'TOR', 'BOS', 'DET', 'CHI', 'NYR'];
+		const t = storied[Math.floor(rng() * storied.length)];
+		theme = { id: 'franchise', value: t, name: teams[t] ?? t };
+	}
+	if (validRollKeys(['F'], theme).length < 1 || validRollKeysAll(['D', 'G'], theme).length < 1)
+		theme = { id: 'all', name: 'All-Time' };
+	return theme;
+}
+
+function pickDistinct(keys, n, rng) {
+	const pool = keys.slice();
+	const out = [];
+	for (let i = 0; i < n; i++) {
+		if (!pool.length) out.push(keys[Math.floor(rng() * keys.length)]);
+		else out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+	}
+	return out;
+}
+
+/** A FIXED sequence of 6 rolls for the daily — identical for everyone, regardless
+ *  of picks. Three forward team-eras, then three that each hold BOTH a D and a G
+ *  so any pick order can finish 3F/2D/1G. */
+export function buildDailyPlan(theme, rng) {
+	const dgKeys = validRollKeysAll(['D', 'G'], theme);
+	const fKeys = validRollKeys(['F'], theme);
+	if (!dgKeys.length || !fKeys.length) return null;
+	const dg = pickDistinct(dgKeys, 3, rng);
+	const used = new Set(dg.map((k) => k[0] + '|' + k[1]));
+	const fPool = fKeys.filter((k) => !used.has(k[0] + '|' + k[1]));
+	const f = pickDistinct(fPool.length >= 3 ? fPool : fKeys, 3, rng);
+	return [...f, ...dg].map(([t, d]) => rollFromKey(t, d));
+}
+
 // --- share codec ----------------------------------------------------------
 /** Encode a finished roster + info-mode into a short URL-safe code. */
 export function encodeRoster(roster, infoMode) {

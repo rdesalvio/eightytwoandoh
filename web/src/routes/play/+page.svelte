@@ -5,8 +5,9 @@
 		validRollKeys,
 		roll,
 		rollFromKey,
-		mulberry32,
-		hashSeed,
+		dailyRng,
+		pickDailyTheme,
+		buildDailyPlan,
 		todayKey,
 		decodeRoster,
 		encodeRoster
@@ -22,10 +23,20 @@
 	// --- config from the URL --------------------------------------------------
 	const sp = page.url.searchParams;
 	const daily = sp.get('daily') === '1';
-	const infoMode = daily ? 'classic' : sp.get('info') === 'hockeyiq' ? 'hockeyiq' : 'classic';
-	const theme = daily ? { id: 'all' } : { id: sp.get('theme') || 'all', value: sp.get('value') || undefined };
-	const dailyKey = `e82o-daily-${todayKey()}`;
-	const rng = daily ? mulberry32(hashSeed('e82o|' + todayKey())) : Math.random;
+	const infoMode = daily ? 'hockeyiq' : sp.get('info') === 'hockeyiq' ? 'hockeyiq' : 'classic';
+	const seedKey = sp.get('seed') || todayKey(); // ?seed=… makes a shareable custom challenge
+	const dailyKey = `e82o-daily-${seedKey}`;
+	const rng = daily ? dailyRng(seedKey) : Math.random;
+
+	// Daily: a fixed, themed challenge — same draws for everyone today (Hockey-IQ).
+	let theme, dailyPlan, dailyName;
+	if (daily) {
+		theme = pickDailyTheme(rng);
+		dailyName = theme.name;
+		dailyPlan = buildDailyPlan(theme, rng) ?? buildDailyPlan({ id: 'all', name: 'All-Time' }, rng);
+	} else {
+		theme = { id: sp.get('theme') || 'all', value: sp.get('value') || undefined };
+	}
 
 	// --- state ----------------------------------------------------------------
 	let roster = $state(Array(6).fill(null));
@@ -93,8 +104,19 @@
 		}, 55);
 	}
 
+	function applyTaken(r) {
+		return (
+			r && {
+				...r,
+				F: r.F.filter((p) => !taken.has(p.id)),
+				D: r.D.filter((p) => !taken.has(p.id)),
+				G: r.G.filter((p) => !taken.has(p.id))
+			}
+		);
+	}
+
 	function newSpin() {
-		spinTo(roll(openGroups, theme, rng, null, taken));
+		spinTo(daily ? applyTaken(dailyPlan[pickNum]) : roll(openGroups, theme, rng, null, taken));
 	}
 
 	function reroll(kind) {
@@ -132,7 +154,7 @@
 	<div class="head">
 		<a class="back" href="/" aria-label="Home">←</a>
 		<div class="progress">
-			<span class="eyebrow">{daily ? 'Daily' : infoMode === 'hockeyiq' ? 'Hockey-IQ' : 'Classic'}</span>
+			<span class="eyebrow">{daily ? 'Daily · ' + dailyName : infoMode === 'hockeyiq' ? 'Hockey-IQ' : 'Classic'}</span>
 			<span class="rnd">Pick <b>{pickNum + 1}</b> <span class="faint">of 6 · {phaseLabel}</span></span>
 		</div>
 	</div>

@@ -1,11 +1,17 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { teams, decades, meta } from '$lib/pool.js';
+	import { teams, decades, meta, dailyRng, pickDailyTheme } from '$lib/pool.js';
 
 	let info = $state('classic');
 	let theme = $state('all');
 	let decade = $state(decades[decades.length - 2]);
 	let franchise = $state('MTL');
+
+	// today's daily theme — client-side only (prerendered HTML must not freeze a build-time date)
+	let todayTheme = $state(null);
+	$effect(() => {
+		todayTheme = pickDailyTheme(dailyRng());
+	});
 
 	const teamOptions = $derived(
 		Object.entries(teams)
@@ -80,9 +86,9 @@
 
 <button class="card daily" onclick={daily}>
 	<div class="dleft">
-		<div class="eyebrow gold">Daily Challenge</div>
+		<div class="eyebrow gold">Daily Challenge{todayTheme ? ' · ' + todayTheme.name : ''}</div>
 		<div class="dtitle">Same draws for everyone today</div>
-		<div class="muted dsub">One run · compare records</div>
+		<div class="muted dsub">Hockey-IQ · one run · compare records</div>
 	</div>
 	<span class="darrow">→</span>
 </button>
