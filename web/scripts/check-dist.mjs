@@ -53,7 +53,7 @@ const strengths = { casual: [], skilled: [] };
 for (const best of [false, true]) for (let i = 0; i < N; i++) strengths[best ? 'skilled' : 'casual'].push(geomean(teamAxes(draft(best))));
 
 console.log('ceiling geomean =', ceil.toFixed(1), '\n');
-for (const scale of [0.94, 0.935, 0.93, 0.925]) {
+for (const scale of [0.925, 0.92, 0.915, 0.91, 0.905]) {
 	const p = 2.5;
 	const anchor = ceil * scale;
 	for (const kind of ['casual', 'skilled']) {

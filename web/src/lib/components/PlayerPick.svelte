@@ -4,6 +4,11 @@
 	const PLURAL = { F: 'Forwards', D: 'Defense', G: 'Goalies' };
 	const groups = $derived(['F', 'D', 'G'].filter((g) => open.includes(g) && roll[g].length));
 
+	// Classic keeps the strongest-first order (stats are shown anyway, helps you
+	// scan). Hockey-IQ sorts by NAME so the order doesn't leak who's best.
+	const list = (g) =>
+		infoMode === 'hockeyiq' ? [...roll[g]].sort((a, b) => a.name.localeCompare(b.name)) : roll[g];
+
 	function statline(p) {
 		const s = p.stats;
 		const szn = `${p.ns} szn`;
@@ -28,7 +33,7 @@
 			<span class="gcount faint">{roll[g].length}</span>
 		</div>
 		<div class="list">
-			{#each roll[g] as p, i (p.id)}
+			{#each list(g) as p, i (p.id)}
 				<button class="pick" onclick={() => onpick(p)} style="animation-delay:{i * 28}ms">
 					<span class="info">
 						<span class="nm">{p.name}</span>
