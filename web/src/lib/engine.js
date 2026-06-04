@@ -1,8 +1,9 @@
 /**
  * Layer-2 win engine. Team strength is a position-weighted MEAN per axis, then
- * the geometric mean across the five axes (so one weak axis caps you), mapped
- * through a convex curve anchored to the best achievable roster. Constants live
- * in the dataset's `engine` block (see pipeline/tune_curve.py).
+ * the geometric mean across the four axes (so a weak axis caps you) — with the
+ * single lowest axis discounted (engine.weakDiscount) so your stars cover for your
+ * one worst category. Mapped through a convex curve anchored to the best achievable
+ * roster. Constants live in the dataset's `engine` block (see pipeline/build_dataset.py).
  */
 
 /** Position-weighted mean of each axis across the filled roster. */
@@ -23,11 +24,21 @@ export function teamAxes(roster, engine) {
 	return out;
 }
 
-export function geomean(axesObj, axes, weights = null) {
+export function geomean(axesObj, axes, weights = null, weakDiscount = 1) {
+	// the single lowest full-weight axis is discounted — "your stars cover for your
+	// one worst category" — softening the one-weak-link cap for near-complete rosters.
+	let minK = null;
+	if (weakDiscount !== 1) {
+		for (const k of axes) {
+			if ((weights?.[k] ?? 1) <= 0) continue;
+			if (minK === null || axesObj[k] < axesObj[minK]) minK = k;
+		}
+	}
 	let logsum = 0;
 	let wsum = 0;
 	for (const k of axes) {
-		const w = weights?.[k] ?? 1;
+		let w = weights?.[k] ?? 1;
+		if (k === minK) w *= weakDiscount;
 		logsum += w * Math.log(Math.max(axesObj[k], 1e-6));
 		wsum += w;
 	}
@@ -51,7 +62,7 @@ export function projectRecord(roster, engine) {
 	const filled = roster.filter(Boolean);
 	const games = engine.games ?? 16;
 	const axesObj = teamAxes(roster, engine);
-	const strength = geomean(axesObj, engine.axes, engine.axisWeights);
+	const strength = geomean(axesObj, engine.axes, engine.axisWeights, engine.weakDiscount ?? 1);
 	const ratio = Math.min(1, strength / engine.anchor);
 	const exact = games * ratio ** engine.p;
 	const wins = filled.length === 6 ? Math.round(exact) : Math.floor(exact);

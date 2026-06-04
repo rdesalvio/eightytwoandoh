@@ -46,12 +46,16 @@ ENGINE_WEIGHTS = {
 GAMES = 16  # 16 wins lift the Stanley Cup (4 playoff rounds x 4 wins)
 # Tuned (vs the real 1-roll mechanic; see web/scripts/check-dist.mjs for Cup% and
 # check-grades.mjs for the full grade distribution). At this scale optimal play —
-# best available every roll PLUS spending both re-rolls on the two weakest slots —
-# wins the Cup ~15%; best-without-re-rolls ~5%; casual/random play ~never wins and
-# caps at the Conference Final (one weak slot tanks the geometric mean). Skilled play
-# lands in the Cup Final ~75% of the time — the Cup is chased, occasionally caught.
+# best available every roll PLUS spending both re-rolls — wins the Cup ~15%;
+# best-without-re-rolls ~5%; casual/random play ~never wins; skilled play lands in
+# the Cup Final ~75% of the time. The Cup is chased, occasionally caught.
 CURVE_P = 2.5
-ANCHOR_SCALE = 0.930
+ANCHOR_SCALE = 0.937
+# Your single weakest category counts for less in the team strength — "your stars
+# cover for your one worst spot." Softens the one-weak-link cap for near-complete
+# rosters (a team strong everywhere but goalie gets a real boost) without rescuing a
+# two-hole roster. Applied to the lowest-valued full-weight axis. 1.0 = off.
+WEAK_DISCOUNT = 0.5
 # Four equal axes: forwards' Scoring + Playmaking, the D's Defense, the goalie's
 # Goaltending. Each group judged on its own job; all era-fair and draftable.
 AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0}
@@ -80,9 +84,14 @@ def _team_axes(roster):
 
 
 def _geomean(axes):
+    # the single lowest full-weight axis is discounted (stars cover your worst spot)
+    weighted = [k for k in AXES_ORDER if AXIS_WEIGHTS[k] > 0]
+    mink = min(weighted, key=lambda k: axes[k]) if weighted else None
     logsum = wsum = 0.0
     for k in AXES_ORDER:
         w = AXIS_WEIGHTS[k]
+        if k == mink:
+            w *= WEAK_DISCOUNT
         logsum += w * math.log(max(axes[k], 1e-6))
         wsum += w
     return math.exp(logsum / wsum)
@@ -464,7 +473,7 @@ def assemble_stints(rated: list[dict], names: dict[str, str]) -> dict:
         },
         "engine": {
             "axes": AXES_ORDER, "slots": SLOTS, "weights": ENGINE_WEIGHTS,
-            "axisWeights": AXIS_WEIGHTS, "games": GAMES,
+            "axisWeights": AXIS_WEIGHTS, "games": GAMES, "weakDiscount": WEAK_DISCOUNT,
             "anchor": round(anchor * ANCHOR_SCALE, 3), "p": CURVE_P, "grades": GRADES,
         },
         "teams": {t: names.get(t, t) for t in sorted(used_teams)},

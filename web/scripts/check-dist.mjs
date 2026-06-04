@@ -14,7 +14,14 @@ for (const td of byTD.values()) for (const g of ['F', 'D', 'G']) td[g].sort((a, 
 const keys = [...byTD.keys()].map((k) => k.split('|'));
 
 const teamAxes = (r) => { const o = {}; for (const k of axes) { let n = 0, d = 0; for (const pl of r) { const w = weights[pl.pos]?.[k] ?? 0; n += w * pl.axes[k]; d += w; } o[k] = d ? n / d : 0; } return o; };
-const geomean = (o) => { let ls = 0, ws = 0; for (const k of axes) { const w = axisWeights?.[k] ?? 1; ls += w * Math.log(Math.max(o[k], 1e-6)); ws += w; } return Math.exp(ls / ws); };
+const WEAK = Number(process.env.WEAK ?? engine.weakDiscount ?? 1);
+const geomean = (o) => {
+	let mk = null;
+	for (const k of axes) { if ((axisWeights?.[k] ?? 1) <= 0) continue; if (mk === null || o[k] < o[mk]) mk = k; }
+	let ls = 0, ws = 0;
+	for (const k of axes) { let w = axisWeights?.[k] ?? 1; if (k === mk) w *= WEAK; ls += w * Math.log(Math.max(o[k], 1e-6)); ws += w; }
+	return Math.exp(ls / ws);
+};
 const gradeOf = (w) => grades.find(([m]) => w >= m)[1];
 
 function roll(open, taken) {

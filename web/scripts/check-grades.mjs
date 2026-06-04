@@ -11,8 +11,15 @@ for (const pl of pool) { const k = pl.team + '|' + pl.decade; if (!byTD.has(k)) 
 for (const td of byTD.values()) for (const g of ['F', 'D', 'G']) td[g].sort((a, b) => b.overall - a.overall);
 const keys = [...byTD.keys()].map((k) => k.split('|'));
 
+const WEAK = Number(process.env.WEAK ?? engine.weakDiscount ?? 1); // discount on the single lowest axis (1 = off)
 const teamAxes = (r) => { const o = {}; for (const k of axes) { let n = 0, d = 0; for (const pl of r) { const w = weights[pl.pos]?.[k] ?? 0; n += w * pl.axes[k]; d += w; } o[k] = d ? n / d : 0; } return o; };
-const geomean = (o) => { let ls = 0, ws = 0; for (const k of axes) { const w = axisWeights?.[k] ?? 1; ls += w * Math.log(Math.max(o[k], 1e-6)); ws += w; } return Math.exp(ls / ws); };
+const geomean = (o) => {
+	let mk = null;
+	for (const k of axes) { if ((axisWeights?.[k] ?? 1) <= 0) continue; if (mk === null || o[k] < o[mk]) mk = k; }
+	let ls = 0, ws = 0;
+	for (const k of axes) { let w = axisWeights?.[k] ?? 1; if (k === mk) w *= WEAK; ls += w * Math.log(Math.max(o[k], 1e-6)); ws += w; }
+	return Math.exp(ls / ws);
+};
 
 function roll(open, taken) {
 	const valid = keys.filter(([t, d]) => open.some((g) => byTD.get(t + '|' + d)[g].some((pl) => !taken.has(pl.id))));
