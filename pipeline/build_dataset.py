@@ -46,11 +46,11 @@ ENGINE_WEIGHTS = {
 GAMES = 16  # 16 wins lift the Stanley Cup (4 playoff rounds x 4 wins)
 # Tuned (vs the real 1-roll mechanic, web/scripts/check-dist.mjs) so that even
 # optimal play — best available at every roll PLUS spending both re-rolls to upgrade
-# the two weakest slots — tops out at a ~7% Cup rate. Best-without-re-rolls is ~2%;
+# the two weakest slots — tops out at a ~10% Cup rate. Best-without-re-rolls is ~3%;
 # casual/random play ~never wins but still lands in the playoff rounds. The Cup is
 # meant to be chased and rarely caught.
 CURVE_P = 2.5
-ANCHOR_SCALE = 0.942
+ANCHOR_SCALE = 0.937
 # Four equal axes: forwards' Scoring + Playmaking, the D's Defense, the goalie's
 # Goaltending. Each group judged on its own job; all era-fair and draftable.
 AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0}

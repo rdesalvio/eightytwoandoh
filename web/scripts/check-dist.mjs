@@ -59,7 +59,7 @@ for (const m of ['casual', 'skilled', 'rerolls']) for (let i = 0; i < N; i++) S[
 
 const p = 2.5;
 console.log('ceiling =', ceil.toFixed(1), 'p =', p, '\n');
-for (const scale of [0.946, 0.944, 0.943, 0.942, 0.941, 0.94, 0.938, 0.935]) {
+for (const scale of [0.939, 0.938, 0.937, 0.936, 0.935, 0.934, 0.933]) {
 	const anchor = ceil * scale;
 	const cup = (arr) => (arr.filter((s) => Math.round(games * Math.min(1, s / anchor) ** p) >= games).length / arr.length * 100).toFixed(1);
 	console.log(`scale ${scale}: Cup  casual ${cup(S.casual).padStart(4)}%   skilled ${cup(S.skilled).padStart(4)}%   skilled+rerolls ${cup(S.rerolls).padStart(4)}%`);
