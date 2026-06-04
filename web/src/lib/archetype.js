@@ -15,14 +15,18 @@ export function archetype(p) {
 		return 'Backup';
 	}
 	if (p.grp === 'D') {
-		if (a.scoring >= 85 || a.playmaking >= 90) return 'Puck-Mover';
-		if (a.twoway >= 85) return 'Shutdown D';
-		return 'Two-Way D';
+		// scoring is heavily compressed for D (only the rare puck-mover scores), so it
+		// cleanly separates offensive blueliners; defense (twoway) then identifies the
+		// shutdown/complete D so the elite two-way guys don't all read as "puck-movers".
+		if (a.scoring >= 62) return 'Offensive D';
+		if (a.twoway >= 92 || (a.twoway >= 86 && a.playmaking >= 84)) return 'Shutdown D';
+		if (a.playmaking >= 64 || a.twoway >= 66) return 'Two-Way D';
+		return 'Stay-at-Home D';
 	}
-	// forwards — valued on offense, never judged on "defense"
-	if (a.scoring >= 88 && a.playmaking >= 88) return 'Superstar';
-	if (a.scoring - a.playmaking >= 12) return 'Sniper';
-	if (a.playmaking - a.scoring >= 12) return 'Playmaker';
-	if (a.durability >= 88) return 'Workhorse';
-	return 'Scorer';
+	// forwards — judged on offense only (a forward's defense isn't measured here)
+	if (a.scoring >= 94 && a.playmaking >= 93) return 'Franchise Forward';
+	if (a.scoring - a.playmaking >= 11) return 'Sniper';
+	if (a.playmaking - a.scoring >= 9) return 'Playmaker';
+	if (a.scoring >= 78 || a.playmaking >= 78) return 'Scorer';
+	return 'Depth Forward';
 }
