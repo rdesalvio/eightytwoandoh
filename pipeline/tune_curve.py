@@ -55,11 +55,17 @@ def team_axes(roster):
     return out
 
 
+GAMES = 16  # 16 wins to lift the Cup (4 rounds x 4)
+AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0, "durability": 0.5}
+
+
 def geomean(axes):
-    prod = 1.0
+    logsum = wsum = 0.0
     for k in AXES:
-        prod *= max(axes[k], 1e-6)
-    return prod ** (1 / len(AXES))
+        w = AXIS_WEIGHTS[k]
+        logsum += w * math.log(max(axes[k], 1e-6))
+        wsum += w
+    return math.exp(logsum / wsum)
 
 
 def strength(roster):
@@ -115,19 +121,19 @@ def main():
     print(f"\nstrength geomean — random: p50={pct(rand_s,.5):.1f} p90={pct(rand_s,.9):.1f} max={max(rand_s):.1f}")
     print(f"strength geomean — expert: p50={pct(exp_s,.5):.1f} p90={pct(exp_s,.9):.1f} p99={pct(exp_s,.99):.1f} max={max(exp_s):.1f}")
 
-    # ANCHOR slightly below ceiling so a near-optimal six can reach 82-0 but rarely
-    for ANCHOR_SCALE in (0.985, 0.99, 1.0):
+    # 16 games is coarse, so tune P so a Cup sweep (16-0) is earned but reachable.
+    for ANCHOR_SCALE in (0.99, 1.0):
         ANCHOR = ceil_s * ANCHOR_SCALE
-        for P in (2.0, 2.5, 3.0):
+        for P in (2.5, 3.5, 5.0, 7.0):
             def wins(s):
-                return round(82 * min(1.0, s / ANCHOR) ** P)
+                return round(GAMES * min(1.0, s / ANCHOR) ** P)
             rw = [wins(s) for s in rand_s]
             ew = [wins(s) for s in exp_s]
-            perfect = sum(1 for w in ew if w >= 82) / N
+            perfect = sum(1 for w in ew if w >= GAMES) / N
             print(f"\nANCHOR={ANCHOR:.1f}(x{ANCHOR_SCALE}) P={P}: "
                   f"random[p50={pct(rw,.5)} p90={pct(rw,.9)}] "
                   f"expert[p50={pct(ew,.5)} p90={pct(ew,.9)} p99={pct(ew,.99)} max={max(ew)}] "
-                  f"82-0 rate(expert)={perfect*100:.2f}%")
+                  f"16-0 rate(expert)={perfect*100:.2f}%")
 
 
 if __name__ == "__main__":

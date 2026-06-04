@@ -49,12 +49,13 @@ export function gradeFor(wins, grades) {
  */
 export function projectRecord(roster, engine) {
 	const filled = roster.filter(Boolean);
+	const games = engine.games ?? 16;
 	const axesObj = teamAxes(roster, engine);
 	const strength = geomean(axesObj, engine.axes, engine.axisWeights);
 	const ratio = Math.min(1, strength / engine.anchor);
-	const exact = 82 * ratio ** engine.p;
+	const exact = games * ratio ** engine.p;
 	const wins = filled.length === 6 ? Math.round(exact) : Math.floor(exact);
-	const losses = 82 - wins;
+	const losses = games - wins;
 
 	let weakest = engine.axes[0];
 	for (const k of engine.axes) if (axesObj[k] < axesObj[weakest]) weakest = k;
@@ -65,7 +66,7 @@ export function projectRecord(roster, engine) {
 		wins,
 		losses,
 		record: `${wins}-${losses}`,
-		perfect: wins === 82,
+		perfect: wins === games,
 		weakest,
 		complete: filled.length === 6,
 		...gradeFor(wins, engine.grades)

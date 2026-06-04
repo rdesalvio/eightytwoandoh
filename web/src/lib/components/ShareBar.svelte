@@ -21,13 +21,13 @@
 			const { toBlob } = await import('html-to-image');
 			const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#0b1120' });
 			if (!blob) return;
-			const file = new File([blob], 'eightytwoandoh.png', { type: 'image/png' });
+			const file = new File([blob], 'chase-the-cup.png', { type: 'image/png' });
 			if (navigator.canShare?.({ files: [file] })) {
 				await navigator.share({ files: [file], text, url });
 			} else {
 				const a = document.createElement('a');
 				a.href = URL.createObjectURL(blob);
-				a.download = 'eightytwoandoh.png';
+				a.download = 'chase-the-cup.png';
 				a.click();
 				URL.revokeObjectURL(a.href);
 			}

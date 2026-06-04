@@ -73,7 +73,7 @@ center("NHL · ERA-ADJUSTED · 1929–PRESENT", 96, font(DISPLAY, 30), AMBER, tr
 size = 168
 while True:
     big = font(DISPLAY, size)
-    parts = [("EIGHTY-TWO ", INK, big), ("&", RED, big), (" OH", INK, big)]
+    parts = [("CHASE THE ", INK, big), ("CUP", RED, big)]
     if sum(d.textlength(t, font=big) for t, _, _ in parts) <= W - 150 or size <= 110:
         break
     size -= 4
@@ -82,8 +82,8 @@ aberr_run(parts, 205)
 d.line([(330, 205 + size + 6), (W - 330, 205 + size + 6)], fill=AMBER, width=3)
 
 center("Draft six legends from across hockey history.", 452, font(DEJAVU, 32), MUTED)
-center("CAN YOU GO 82-0?", 505, font(DISPLAY, 62), RED, track=2)
-d.text((58, H - 80), "eightytwoando.com", font=font(DISPLAY, 30), fill=MUTED)
+center("16 WINS TO THE CUP — CAN YOU GO 16-0?", 512, font(DISPLAY, 44), RED, track=1)
+d.text((58, H - 80), "chase-the-cup.com", font=font(DISPLAY, 30), fill=MUTED)
 
 # --- CRT vignette ---
 vig = Image.new("L", (W, H), 0)

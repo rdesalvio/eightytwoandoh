@@ -6,11 +6,12 @@
 
 	function statline(p) {
 		const s = p.stats;
+		const szn = `${p.ns} szn`;
 		if (p.grp === 'G') {
 			const sv = s.svp != null ? ` · .${String(Math.round(s.svp * 1000)).padStart(3, '0')} Sv%` : '';
-			return `${s.w}W · ${s.gaa.toFixed(2)} GAA${sv} · ${s.so} SO`;
+			return `${s.w}W · ${s.gaa.toFixed(2)} GAA${sv} · ${szn}`;
 		}
-		return `${s.g} G · ${s.a} A · ${s.p} P · ${s.gp} GP`;
+		return `${s.g} G · ${s.a} A · ${s.p} P · ${szn}`;
 	}
 </script>
 
@@ -27,7 +28,7 @@
 			<span class="gcount faint">{roll[g].length}</span>
 		</div>
 		<div class="list">
-			{#each roll[g] as p, i (p.id + p.season)}
+			{#each roll[g] as p, i (p.id)}
 				<button class="pick" onclick={() => onpick(p)} style="animation-delay:{i * 28}ms">
 					<span class="info">
 						<span class="nm">{p.name}</span>

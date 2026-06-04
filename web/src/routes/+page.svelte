@@ -33,13 +33,13 @@
 <header class="hero fadeUp">
 	<div class="eyebrow">NHL · 1929–{String(meta.lastSeason).slice(4)} · era-adjusted</div>
 	<h1>
-		<span class="l1 chrome">Eighty-Two</span>
-		<span class="l2"><span class="amp">&amp;</span> <span class="chrome">Oh</span></span>
+		<span class="l1 chrome">Chase The</span>
+		<span class="l2"><span class="cup">Cup</span></span>
 	</h1>
 	<div class="rule wm"></div>
 	<p class="tag">
 		Draft six legends from across hockey history. Ratings are <span class="serif-it">hidden</span> and
-		era-adjusted — can you build the perfect six and go <b>82-0</b>?
+		era-adjusted — win all <b>16</b> and lift the Cup. Can you go <b>16-0</b>?
 	</p>
 </header>
 
@@ -111,9 +111,12 @@
 	.l2 {
 		display: block;
 	}
-	.amp {
+	.cup {
 		color: var(--red);
 		-webkit-text-fill-color: var(--red);
+		text-shadow:
+			-1px 0 rgba(70, 174, 191, 0.45),
+			1px 0 rgba(255, 255, 255, 0.3);
 	}
 	.rule.wm {
 		max-width: 230px;

@@ -28,7 +28,7 @@ for (const p of pool) {
 	}
 	td[p.grp].push(p);
 	td.groups.add(p.grp);
-	stintIndex.set(`${p.id}|${p.team}|${p.season}`, p);
+	stintIndex.set(`${p.id}|${p.team}|${p.decade}`, p);
 }
 for (const td of byTD.values())
 	for (const g of ['F', 'D', 'G']) td[g].sort((a, b) => b.overall - a.overall);
@@ -134,7 +134,7 @@ export function roll(openGroups, theme, rng = Math.random, extra = null, taken =
 export function encodeRoster(roster, infoMode) {
 	const payload = {
 		m: infoMode === 'hockeyiq' ? 1 : 0,
-		r: roster.filter(Boolean).map((p) => [p.id, p.team, p.season])
+		r: roster.filter(Boolean).map((p) => [p.id, p.team, p.decade])
 	};
 	return lzString.compressToEncodedURIComponent(JSON.stringify(payload));
 }
@@ -145,7 +145,7 @@ export function decodeRoster(code) {
 		const json = lzString.decompressFromEncodedURIComponent(code);
 		if (!json) return null;
 		const { m, r } = JSON.parse(json);
-		const roster = r.map(([id, team, season]) => stintIndex.get(`${id}|${team}|${season}`) ?? null);
+		const roster = r.map(([id, team, decade]) => stintIndex.get(`${id}|${team}|${decade}`) ?? null);
 		if (roster.some((p) => !p)) return null;
 		return { infoMode: m ? 'hockeyiq' : 'classic', roster };
 	} catch {

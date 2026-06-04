@@ -68,7 +68,7 @@ const ds = JSON.parse(fs.readFileSync('./src/lib/data/players.json'));
 const pick = (g, n) => ds.pool.filter((p) => p.grp === g).sort((a, b) => b.overall - a.overall)[n];
 const roster = [pick('F', 0), pick('F', 1), pick('F', 2), pick('D', 0), pick('D', 1), pick('G', 0)];
 const code = lz.compressToEncodedURIComponent(
-	JSON.stringify({ m: 0, r: roster.map((p) => [p.id, p.team, p.season]) })
+	JSON.stringify({ m: 0, r: roster.map((p) => [p.id, p.team, p.decade]) })
 );
 await page.goto(`${BASE}/r/${code}`, { waitUntil: 'networkidle0' });
 await page.waitForSelector('.resultcard', { timeout: 5000 });

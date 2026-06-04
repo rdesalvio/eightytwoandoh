@@ -109,7 +109,7 @@
 	if (phase !== 'done') newSpin();
 </script>
 
-<svelte:head><title>Draft · Eighty-Two & Oh</title></svelte:head>
+<svelte:head><title>Draft · Chase The Cup</title></svelte:head>
 
 {#if phase === 'done'}
 	{#if alreadyPlayed}

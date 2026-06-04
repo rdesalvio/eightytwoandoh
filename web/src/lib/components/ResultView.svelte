@@ -18,8 +18,8 @@
 	let shareUrl = $derived(`${origin}/r/${encodeRoster(roster, infoMode)}`);
 	let shareText = $derived(
 		result.perfect
-			? `I went a PERFECT 82-0 on Eighty-Two & Oh 🏒🏆 Can you?`
-			: `My all-time six went ${result.record} (${result.grade} · ${result.label}) on Eighty-Two & Oh 🏒 Can you go 82-0?`
+			? `I swept the playoffs 16-0 and won the Cup on Chase The Cup 🏒🏆 Can you?`
+			: `My all-time six went ${result.record} (${result.grade} · ${result.label}) on Chase The Cup 🏒 Can you win the Cup?`
 	);
 </script>
 
@@ -27,7 +27,7 @@
 	<div class="card resultcard" bind:this={card}>
 		<div class="masthead">
 			<span class="rule"></span>
-			<span class="brand chrome">Eighty-Two &amp; Oh</span>
+			<span class="brand chrome">Chase The Cup</span>
 			<span class="rule"></span>
 		</div>
 		<GradeBadge {...result} />
@@ -51,7 +51,7 @@
 				</div>
 			{/each}
 		</div>
-		<div class="foot">eightytwoando.com — era-adjusted · all NHL history since 1929-30</div>
+		<div class="foot">chase-the-cup.com — era-adjusted · all NHL history since 1929-30</div>
 	</div>
 
 	<div class="actions stack">

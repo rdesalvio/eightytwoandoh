@@ -41,20 +41,21 @@ ENGINE_WEIGHTS = {
     "D": {"scoring": 0.50, "playmaking": 0.70, "twoway": 1.60, "goaltending": 0, "durability": 1.0},
     "G": {"scoring": 0, "playmaking": 0, "twoway": 0, "goaltending": 1.0, "durability": 1.0},
 }
+GAMES = 16  # 16 wins lift the Stanley Cup (4 playoff rounds x 4 wins)
 CURVE_P = 2.5
-ANCHOR_SCALE = 0.99
+ANCHOR_SCALE = 0.985
 # Durability is a fun but obscure axis — keep it as a lighter factor in the
 # (weighted) geometric mean so it never dominates / over-caps a roster.
 AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0, "durability": 0.5}
-# record -> grade ladder (minWins, grade, label, color) — vintage almanac palette
+# record -> grade ladder out of 16 (minWins, grade, label, color), themed to the
+# playoff rounds — every 4 wins is another round on the way to the Cup.
 GRADES = [
-    [82, "S+", "Immortal", "#a9772a"],
-    [76, "A+", "Dynasty", "#9c0c22"],
-    [70, "A", "Cup Favorite", "#c8102e"],
-    [57, "B", "Contender", "#1d2c49"],
-    [44, "C", "Playoff Team", "#6b6228"],
-    [30, "D", "Lottery Bound", "#8a7d68"],
-    [0, "F", "Tank Job", "#9a3b32"],
+    [16, "S+", "Cup Champion", "#ffce54"],
+    [12, "A", "Cup Final", "#ff5663"],
+    [8, "B", "Conference Final", "#4db6ff"],
+    [4, "C", "Second Round", "#5fd38a"],
+    [1, "D", "First Round", "#9aa9ba"],
+    [0, "F", "Missed Playoffs", "#7c8a99"],
 ]
 
 
@@ -279,42 +280,32 @@ def build():
             if r["gp"] < gate:
                 continue
             grp, row = r["grp"], r["row"]
-            scoring = phi99(zscore(r["adj_g"], g_mu, g_sd))
-            playmaking = phi99(zscore(r["adj_a"], a_mu, a_sd))
+            z_sc = zscore(r["adj_g"], g_mu, g_sd)
+            z_pl = zscore(r["adj_a"], a_mu, a_sd)
             # two-way
             if grp == "D":
                 z_pts = zscore(r["adj_p"], dpts_mu, dpts_sd)
                 if r["pm"] is not None:
-                    z_pm = zscore(r["pm"], dpm_mu, dpm_sd)
-                    tw = 0.6 * z_pts + 0.4 * z_pm
+                    z_tw = 0.6 * z_pts + 0.4 * zscore(r["pm"], dpm_mu, dpm_sd)
                 else:
-                    tw = z_pts
+                    z_tw = z_pts
             else:
                 # forwards: two-way = penalty-kill / defensive usage (SH points),
                 # NOT plus/minus (which just tracks linemate offense). Without SH
                 # data (pre-1955) forwards sit neutral, leaving the axis to the D.
-                tw = zscore(r["sh"], fsh_mu, fsh_sd) if (r["sh"] is not None and fsh) else 0.0
-            twoway = phi99(tw)
+                z_tw = zscore(r["sh"], fsh_mu, fsh_sd) if (r["sh"] is not None and fsh) else 0.0
             # durability
             gp_mu, gp_sd, cgp_mu, cgp_sd, pim_mu, pim_sd = durF if grp == "F" else durD
-            dur = (0.45 * zscore(r["gp"], gp_mu, gp_sd)
-                   + 0.35 * zscore(career_gp[row["playerId"]], cgp_mu, cgp_sd)
-                   + 0.20 * zscore(r["pim"], pim_mu, pim_sd))
-            durability = phi99(dur)
-
-            if grp == "F":
-                overall = round(0.42 * scoring + 0.40 * playmaking + 0.10 * twoway + 0.08 * durability)
-            else:
-                overall = round(0.20 * scoring + 0.28 * playmaking + 0.42 * twoway + 0.10 * durability)
+            z_du = (0.45 * zscore(r["gp"], gp_mu, gp_sd)
+                    + 0.35 * zscore(career_gp[row["playerId"]], cgp_mu, cgp_sd)
+                    + 0.20 * zscore(r["pim"], pim_mu, pim_sd))
 
             rated.append({
                 "id": row["playerId"], "name": row["skaterFullName"], "pos": r["pos"],
                 "grp": grp, "season": sid, "teams": row.get("teamAbbrevs", ""),
-                "axes": {"scoring": scoring, "playmaking": playmaking, "twoway": twoway,
-                          "goaltending": 0, "durability": durability},
-                "overall": overall,
-                "conf": ctx["assists_conf"],
-                "stats": {"gp": r["gp"], "g": row.get("goals") or 0, "a": row.get("assists") or 0,
+                "gp": r["gp"], "conf": ctx["assists_conf"],
+                "z": {"scoring": z_sc, "playmaking": z_pl, "twoway": z_tw, "durability": z_du},
+                "stats": {"g": row.get("goals") or 0, "a": row.get("assists") or 0,
                            "p": row.get("points") or 0, "pim": r["pim"], "pm": r["pm"]},
             })
 
@@ -348,27 +339,25 @@ def build():
                 continue
             pid = g["playerId"]
             if post55 and pid in gsaa:
-                goaltending = phi99(0.7 * zscore(gsaa[pid], gsaa_mu, gsaa_sd)
-                                    + 0.3 * zscore(svaa[pid], svaa_mu, svaa_sd))
+                # balance volume (GSAA) with rate (save% vs era) so a workhorse on
+                # a bad team can't inflate purely on shots faced.
+                gz = 0.45 * zscore(gsaa[pid], gsaa_mu, gsaa_sd) + 0.55 * zscore(svaa[pid], svaa_mu, svaa_sd)
                 conf = 1.0
             elif pid in gaa_idx:
-                goaltending = phi99(zscore(gaa_idx[pid], idx_mu, idx_sd))
+                gz = zscore(gaa_idx[pid], idx_mu, idx_sd)
                 conf = 0.65
             else:
                 continue
-            durability = phi99(0.6 * zscore(gp, gdur_gp_mu, gdur_gp_sd)
-                               + 0.4 * zscore(career_gp[pid], gdur_c_mu, gdur_c_sd))
-            overall = round(0.85 * goaltending + 0.15 * durability)
+            gz_du = 0.6 * zscore(gp, gdur_gp_mu, gdur_gp_sd) + 0.4 * zscore(career_gp[pid], gdur_c_mu, gdur_c_sd)
             rated.append({
                 "id": pid, "name": g["goalieFullName"], "pos": "G", "grp": "G",
                 "season": sid, "teams": g.get("teamAbbrevs", ""),
-                "axes": {"scoring": 0, "playmaking": 0, "twoway": 0,
-                          "goaltending": goaltending, "durability": durability},
-                "overall": overall, "conf": conf,
-                "stats": {"gp": gp, "w": g.get("wins") or 0, "l": g.get("losses") or 0,
-                           "gaa": round(g.get("goalsAgainstAverage") or 0, 2),
-                           "svp": round(g.get("savePct"), 3) if g.get("savePct") else None,
-                           "so": g.get("shutouts") or 0},
+                "gp": gp, "conf": conf,
+                "z": {"goaltending": gz, "durability": gz_du},
+                "graw": {"w": g.get("wins") or 0, "l": g.get("losses") or 0,
+                          "so": g.get("shutouts") or 0, "ga": g.get("goalsAgainst") or 0,
+                          "saves": g.get("saves") or 0, "sa": g.get("shotsAgainst") or 0,
+                          "toi": g.get("timeOnIce") or 0, "gaa": g.get("goalsAgainstAverage") or 0},
             })
 
     return assemble_stints(rated, names)
@@ -377,39 +366,76 @@ def build():
 # ----------------------------------------------------------- stints + export
 
 
+def _overall(grp: str, axes: dict) -> int:
+    if grp == "F":
+        return round(0.42 * axes["scoring"] + 0.40 * axes["playmaking"]
+                     + 0.10 * axes["twoway"] + 0.08 * axes["durability"])
+    if grp == "D":
+        return round(0.20 * axes["scoring"] + 0.28 * axes["playmaking"]
+                     + 0.42 * axes["twoway"] + 0.10 * axes["durability"])
+    return round(0.85 * axes["goaltending"] + 0.15 * axes["durability"])
+
+
 def assemble_stints(rated: list[dict], names: dict[str, str]) -> dict:
-    """Collapse player-seasons into (player, team, decade) stints, keeping the
-    best season as the representative card. Multi-team seasons count for each
-    team listed."""
-    best: dict[tuple, dict] = {}
+    """Collapse player-seasons into one card per (player, team, DECADE) — an era.
+    The rating is the games-weighted average of the player's per-season z-scores
+    across that decade (each season judged vs its own peers), and the stats are
+    decade totals. Multi-team seasons count for each team listed."""
+    groups: dict[tuple, list[dict]] = defaultdict(list)
     for r in rated:
-        start_year = r["season"] // 10000
-        dec = decade_label(start_year)
+        dec = decade_label(r["season"] // 10000)
         for tri in r["teams"].split(","):
-            if not tri:
-                continue
-            key = (r["id"], tri, dec)
-            if key not in best or r["overall"] > best[key]["overall"]:
-                best[key] = r | {"team": tri, "decade": dec}
+            if tri:
+                groups[(r["id"], tri, dec)].append(r)
+
+    stints = []
+    for (pid, tri, dec), seasons in groups.items():
+        grp = seasons[0]["grp"]
+        gp_total = sum(s["gp"] for s in seasons)
+        axes = {}
+        for k in AXES_ORDER:
+            num = wsum = 0.0
+            for s in seasons:
+                if k in s["z"]:
+                    num += s["z"][k] * s["gp"]
+                    wsum += s["gp"]
+            axes[k] = phi99(num / wsum) if wsum else 0
+        if grp == "G":
+            ga = sum(s["graw"]["ga"] for s in seasons)
+            sa = sum(s["graw"]["sa"] for s in seasons)
+            toi = sum(s["graw"]["toi"] for s in seasons)
+            gaa = (ga / (toi / 3600) if toi
+                   else sum(s["graw"]["gaa"] * s["gp"] for s in seasons) / (gp_total or 1))
+            stats = {"gp": gp_total, "w": sum(s["graw"]["w"] for s in seasons),
+                     "l": sum(s["graw"]["l"] for s in seasons),
+                     "so": sum(s["graw"]["so"] for s in seasons),
+                     "gaa": round(gaa, 2),
+                     "svp": round(sum(s["graw"]["saves"] for s in seasons) / sa, 3) if sa else None}
+        else:
+            pms = [s["stats"]["pm"] for s in seasons if s["stats"]["pm"] is not None]
+            stats = {"gp": gp_total, "g": sum(s["stats"]["g"] for s in seasons),
+                     "a": sum(s["stats"]["a"] for s in seasons),
+                     "p": sum(s["stats"]["p"] for s in seasons),
+                     "pim": sum(s["stats"]["pim"] for s in seasons),
+                     "pm": sum(pms) if pms else None}
+        stints.append({
+            "id": pid, "name": seasons[0]["name"], "pos": seasons[0]["pos"], "grp": grp,
+            "team": tri, "decade": dec, "ns": len(seasons),
+            "label": f"{dec} · {names.get(tri, tri)}",
+            "axes": axes, "overall": _overall(grp, axes),
+            "conf": round(min(s["conf"] for s in seasons), 2), "stats": stats,
+        })
 
     # cap per (team, decade, group) to keep the pool sharp
     CAPS = {"F": 10, "D": 6, "G": 4}
     buckets: dict[tuple, list[dict]] = defaultdict(list)
-    for st in best.values():
+    for st in stints:
         buckets[(st["team"], st["decade"], st["grp"])].append(st)
 
     players = []
-    for (tri, dec, grp), group in buckets.items():
+    for group in buckets.values():
         group.sort(key=lambda s: s["overall"], reverse=True)
-        for st in group[: CAPS[grp]]:
-            yr = st["season"]
-            label = f"{yr // 10000}-{str(yr % 10000)[2:]} {names.get(tri, tri)}"
-            players.append({
-                "id": st["id"], "name": st["name"], "pos": st["pos"], "grp": grp,
-                "team": tri, "decade": dec, "season": yr, "label": label,
-                "axes": st["axes"], "overall": st["overall"], "conf": round(st["conf"], 2),
-                "stats": st["stats"],
-            })
+        players.extend(group[: CAPS[group[0]["grp"]]])
 
     # teams that actually have players, by decade
     team_decades: dict[str, set] = defaultdict(set)
@@ -423,13 +449,13 @@ def assemble_stints(rated: list[dict], names: dict[str, str]) -> dict:
     anchor = compute_anchor(players)
     dataset = {
         "meta": {
-            "firstSeason": 19291930, "lastSeason": max(p["season"] for p in players),
+            "firstSeason": 19291930, "lastSeason": max(r["season"] for r in rated),
             "cutoff": "1929-30 (forward passing legalized in all zones; scoring tripled)",
             "players": len(players),
         },
         "engine": {
             "axes": AXES_ORDER, "slots": SLOTS, "weights": ENGINE_WEIGHTS,
-            "axisWeights": AXIS_WEIGHTS,
+            "axisWeights": AXIS_WEIGHTS, "games": GAMES,
             "anchor": round(anchor * ANCHOR_SCALE, 3), "p": CURVE_P, "grades": GRADES,
         },
         "teams": {t: names.get(t, t) for t in sorted(used_teams)},

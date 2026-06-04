@@ -10,7 +10,7 @@
 	];
 </script>
 
-<svelte:head><title>How to play · Eighty-Two & Oh</title></svelte:head>
+<svelte:head><title>How to play · Chase The Cup</title></svelte:head>
 
 <header class="h">
 	<a class="back" href="/" aria-label="Home">←</a>
@@ -21,7 +21,8 @@
 	<h2>The goal</h2>
 	<p>
 		Draft six players from across NHL history — <b>3 forwards, 2 defensemen, 1 goalie</b> — and an
-		engine projects your record over an 82-game season. A perfect <b>82-0</b> is the dream.
+		engine projects your run through the playoffs: <b>16 wins</b> (four rounds of four) lift the
+		Stanley Cup. A perfect <b>16-0</b> sweep is the dream.
 	</p>
 </section>
 
@@ -86,7 +87,7 @@
 			<div class="gr">
 				<span class="g" style="color:{color};border-color:{color}">{g}</span>
 				<span class="gl">{label}</span>
-				<span class="gw muted">{g === 'S+' ? '82-0' : min + '+ W'}</span>
+				<span class="gw muted">{g === 'S+' ? '16-0' : min + '+ W'}</span>
 			</div>
 		{/each}
 	</div>

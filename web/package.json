@@ -1,6 +1,6 @@
 {
-  "name": "eightytwoandoh",
-  "description": "Eighty-Two and Oh — a hockey roster game",
+  "name": "chase-the-cup",
+  "description": "Chase The Cup — a hockey roster game",
   "private": true,
   "version": "0.1.0",
   "type": "module",

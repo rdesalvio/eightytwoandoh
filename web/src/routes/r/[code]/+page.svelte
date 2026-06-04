@@ -6,7 +6,7 @@
 	const decoded = decodeRoster(page.params.code);
 </script>
 
-<svelte:head><title>A roster on Eighty-Two & Oh</title></svelte:head>
+<svelte:head><title>A roster on Chase The Cup</title></svelte:head>
 
 {#if decoded}
 	<p class="eyebrow" style="text-align:center;margin-bottom:10px">Someone’s all-time six</p>
