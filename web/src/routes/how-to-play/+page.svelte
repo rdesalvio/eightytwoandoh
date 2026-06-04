@@ -5,8 +5,7 @@
 		['Scoring', 'Goals', 'Forwards'],
 		['Playmaking', 'Assists', 'Forwards & puck-moving D'],
 		['Defense', 'Your defensemen vs their peers', 'Defensemen'],
-		['Goaltending', 'Goalie quality vs his era', 'Your goalie'],
-		['Durability', 'Games played & longevity', 'Everyone · counts least']
+		['Goaltending', 'Goalie quality vs his era', 'Your goalie']
 	];
 </script>
 
@@ -39,7 +38,7 @@
 <section class="card sec">
 	<h2>How scoring works</h2>
 	<p>
-		Every player is scored <b>0–99 in each of five categories</b>, measured only against others from
+		Every player is scored <b>0–99 in each of four categories</b>, measured only against others from
 		<span class="serif-it">their own era</span> — so a 1950s great isn’t punished for low modern
 		totals. That rating is <b>hidden</b>; infer it from the stats, the year, and your hockey sense.
 	</p>
@@ -55,9 +54,8 @@
 	</div>
 	<p class="note">
 		Each group is judged on its own job — forwards on Scoring &amp; Playmaking, your two
-		defensemen on Defense, your goalie on Goaltending; everyone shares Durability. Your record
-		blends all five and your <b>lowest</b> drags hardest, so chase <b>balance</b>, not just scoring.
-		(Durability is weighted lightest — a fun bonus, not the main event.)
+		defensemen on Defense, your goalie on Goaltending. Your record blends all four and your
+		<b>lowest</b> drags hardest, so chase <b>balance</b>, not just scoring.
 	</p>
 </section>
 

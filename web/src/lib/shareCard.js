@@ -7,7 +7,7 @@ import { AXIS_LABELS } from './engine.js';
 
 const W = 1080;
 const H = 1350;
-const ORDER = ['scoring', 'playmaking', 'twoway', 'goaltending', 'durability'];
+const ORDER = ['scoring', 'playmaking', 'twoway', 'goaltending'];
 const C = {
 	cream: '#f3e9d4',
 	muted: '#a4906f',
@@ -168,8 +168,8 @@ export async function renderShareCard(result, roster) {
 	ctx.font = `700 38px ${D}`;
 	ctx.fillText(label, gx + chipW + gap, gy - 3);
 
-	// radar
-	drawRadar(ctx, W / 2, 745, 192, result.axes, result.weakest);
+	// radar (4-axis diamond — pull up + tighter so the bottom label clears the note)
+	drawRadar(ctx, W / 2, 718, 178, result.axes, result.weakest);
 
 	// weakest note
 	ctx.textAlign = 'center';

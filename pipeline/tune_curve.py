@@ -21,7 +21,7 @@ from pathlib import Path
 random.seed(82)
 POOL = json.loads((Path(__file__).parent.parent / "web/src/lib/data/players.json").read_text())["pool"]
 
-AXES = ["scoring", "playmaking", "twoway", "goaltending", "durability"]
+AXES = ["scoring", "playmaking", "twoway", "goaltending"]
 W = {
     "C": {"scoring": 1.15, "playmaking": 1.20, "twoway": 0.30, "goaltending": 0, "durability": 1.0},
     "L": {"scoring": 1.00, "playmaking": 1.00, "twoway": 0.25, "goaltending": 0, "durability": 1.0},
@@ -56,7 +56,7 @@ def team_axes(roster):
 
 
 GAMES = 16  # 16 wins to lift the Cup (4 rounds x 4)
-AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0, "durability": 0.5}
+AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0}
 
 
 def geomean(axes):
@@ -122,9 +122,9 @@ def main():
     print(f"strength geomean — expert: p50={pct(exp_s,.5):.1f} p90={pct(exp_s,.9):.1f} p99={pct(exp_s,.99):.1f} max={max(exp_s):.1f}")
 
     # 16 games is coarse, so tune P so a Cup sweep (16-0) is earned but reachable.
-    for ANCHOR_SCALE in (0.99, 1.0):
+    for ANCHOR_SCALE in (0.95, 0.97, 0.985):
         ANCHOR = ceil_s * ANCHOR_SCALE
-        for P in (2.5, 3.5, 5.0, 7.0):
+        for P in (2.0, 2.5, 3.0):
             def wins(s):
                 return round(GAMES * min(1.0, s / ANCHOR) ** P)
             rw = [wins(s) for s in rand_s]

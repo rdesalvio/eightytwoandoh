@@ -32,7 +32,7 @@ TARGET_APG = 10.0  # 1.67 assists/goal
 
 # Layer-2 win-curve engine (tuned in tune_curve.py). Embedded in the dataset so
 # the JS engine and the Python tuner share one source of truth.
-AXES_ORDER = ["scoring", "playmaking", "twoway", "goaltending", "durability"]
+AXES_ORDER = ["scoring", "playmaking", "twoway", "goaltending"]
 SLOTS = ["F", "F", "F", "D", "D", "G"]
 # "twoway" is the DEFENSE axis: driven only by the defensemen (forwards aren't
 # judged on something the historical data can't measure).
@@ -44,11 +44,11 @@ ENGINE_WEIGHTS = {
     "G": {"scoring": 0, "playmaking": 0, "twoway": 0, "goaltending": 1.0, "durability": 1.0},
 }
 GAMES = 16  # 16 wins lift the Stanley Cup (4 playoff rounds x 4 wins)
-CURVE_P = 2.5
-ANCHOR_SCALE = 0.985
-# Durability is a fun but obscure axis — keep it as a lighter factor in the
-# (weighted) geometric mean so it never dominates / over-caps a roster.
-AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0, "durability": 0.5}
+CURVE_P = 2.0
+ANCHOR_SCALE = 0.97
+# Four equal axes: forwards' Scoring + Playmaking, the D's Defense, the goalie's
+# Goaltending. Each group judged on its own job; all era-fair and draftable.
+AXIS_WEIGHTS = {"scoring": 1.0, "playmaking": 1.0, "twoway": 1.0, "goaltending": 1.0}
 # record -> grade ladder out of 16 (minWins, grade, label, color), themed to the
 # playoff rounds — every 4 wins is another round on the way to the Cup.
 GRADES = [
@@ -370,12 +370,10 @@ def build():
 
 def _overall(grp: str, axes: dict) -> int:
     if grp == "F":
-        # forwards are valued on offense + availability, not "defense"
-        return round(0.45 * axes["scoring"] + 0.42 * axes["playmaking"] + 0.13 * axes["durability"])
+        return round(0.52 * axes["scoring"] + 0.48 * axes["playmaking"])
     if grp == "D":
-        return round(0.20 * axes["scoring"] + 0.28 * axes["playmaking"]
-                     + 0.42 * axes["twoway"] + 0.10 * axes["durability"])
-    return round(0.85 * axes["goaltending"] + 0.15 * axes["durability"])
+        return round(0.22 * axes["scoring"] + 0.31 * axes["playmaking"] + 0.47 * axes["twoway"])
+    return round(axes["goaltending"])
 
 
 def assemble_stints(rated: list[dict], names: dict[str, str]) -> dict:
