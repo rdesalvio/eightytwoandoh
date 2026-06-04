@@ -3,7 +3,7 @@ import os from 'os';
 import puppeteer from 'puppeteer-core';
 import lz from 'lz-string';
 
-const BASE = 'http://localhost:5179';
+const BASE = process.argv[2] || process.env.BASE || 'http://localhost:5179';
 const OUT = '/tmp/e82o';
 fs.mkdirSync(OUT, { recursive: true });
 
