@@ -43,7 +43,8 @@ await page.waitForFunction(() => location.pathname === '/play');
 // 6 picks
 for (let i = 0; i < 6; i++) {
 	await page.waitForSelector('.pick', { timeout: 5000 });
-	if (i === 2) await shot('3-draft-pick');
+	if (i === 1) await shot('3-draft-forwards');
+	if (i === 4) await shot('3b-draft-dg');
 	await page.$$eval('.pick', (b) => b[0].click());
 	await sleep(800); // spin + render next round
 }

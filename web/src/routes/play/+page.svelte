@@ -40,12 +40,22 @@
 	const reduce =
 		typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	let openGroups = $derived(['F', 'D', 'G'].filter((g) => roster.filter((p) => p?.grp === g).length < CAP[g]));
+	// Draft forwards first (picks 1-3), then defense + goalie together (picks 4-6).
+	let openGroups = $derived(
+		roster.filter((p) => p?.grp === 'F').length < CAP.F
+			? ['F']
+			: ['D', 'G'].filter((g) => roster.filter((p) => p?.grp === g).length < CAP[g])
+	);
 	let taken = $derived(new Set(roster.filter(Boolean).map((p) => p.id)));
-	const fr = (k) => activeRoll && k[1] === activeRoll.decade && k[0] !== activeRoll.team;
-	const er = (k) => activeRoll && k[0] === activeRoll.team && k[1] !== activeRoll.decade;
-	let canFranchise = $derived(!daily && !usedSkips.franchise && !!activeRoll && validRollKeys(openGroups, theme, fr, taken).length > 0);
-	let canEra = $derived(!daily && !usedSkips.era && !!activeRoll && validRollKeys(openGroups, theme, er, taken).length > 0);
+	// Availability uses the broad "any other team / era" test so a skip never greys
+	// out just because the other skip was used; the reroll prefers the tight intent.
+	const diffTeam = (k) => activeRoll && k[0] !== activeRoll.team;
+	const diffEra = (k) => activeRoll && k[1] !== activeRoll.decade;
+	const sameEraNewTeam = (k) => activeRoll && k[1] === activeRoll.decade && k[0] !== activeRoll.team;
+	const sameTeamNewEra = (k) => activeRoll && k[0] === activeRoll.team && k[1] !== activeRoll.decade;
+	let canFranchise = $derived(!daily && !usedSkips.franchise && !!activeRoll && validRollKeys(openGroups, theme, diffTeam, taken).length > 0);
+	let canEra = $derived(!daily && !usedSkips.era && !!activeRoll && validRollKeys(openGroups, theme, diffEra, taken).length > 0);
+	let phaseLabel = $derived(openGroups.includes('F') ? 'Forwards' : 'Defense & Goalie');
 
 	// restore a finished daily run
 	if (daily && typeof localStorage !== 'undefined') {
@@ -90,7 +100,9 @@
 	function reroll(kind) {
 		if (kind === 'franchise' ? !canFranchise : !canEra) return;
 		usedSkips[kind] = true;
-		spinTo(roll(openGroups, theme, rng, kind === 'franchise' ? fr : er, taken));
+		const pref = kind === 'franchise' ? sameEraNewTeam : sameTeamNewEra;
+		const broad = kind === 'franchise' ? diffTeam : diffEra;
+		spinTo(roll(openGroups, theme, rng, pref, taken) ?? roll(openGroups, theme, rng, broad, taken));
 	}
 
 	function pick(player) {
@@ -121,7 +133,7 @@
 		<a class="back" href="/" aria-label="Home">←</a>
 		<div class="progress">
 			<span class="eyebrow">{daily ? 'Daily' : infoMode === 'hockeyiq' ? 'Hockey-IQ' : 'Classic'}</span>
-			<span class="rnd">Pick <b>{pickNum + 1}</b> <span class="faint">of 6</span></span>
+			<span class="rnd">Pick <b>{pickNum + 1}</b> <span class="faint">of 6 · {phaseLabel}</span></span>
 		</div>
 	</div>
 
