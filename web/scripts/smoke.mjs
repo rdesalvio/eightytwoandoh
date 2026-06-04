@@ -49,8 +49,24 @@ for (let i = 0; i < 6; i++) {
 	await sleep(800); // spin + render next round
 }
 await page.waitForSelector('.resultcard', { timeout: 5000 });
-await sleep(400);
+await sleep(500);
 await shot('4-result');
+
+// verify the SHARE image actually rasterizes the radar (the mobile-black bug)
+try {
+	await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js' });
+	const dataUrl = await page.evaluate(
+		async () =>
+			await window.htmlToImage.toPng(document.querySelector('.resultcard'), {
+				pixelRatio: 2,
+				backgroundColor: '#0b1120'
+			})
+	);
+	fs.writeFileSync(`${OUT}/share-capture.png`, Buffer.from(dataUrl.split(',')[1], 'base64'));
+	console.log('share-capture saved (verifies radar rasterizes)');
+} catch (e) {
+	console.log('share-capture FAILED:', e.message);
+}
 
 // verify "Draft again" actually restarts a draft (was a no-op bug)
 await page.evaluate(() => {

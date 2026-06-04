@@ -57,18 +57,11 @@ body {
 
 body {
 	min-height: 100dvh;
-	background-color: var(--bg);
-	/* backyard rink at night: warm string-light glow up top, cold ice glow rising
-	   off the sheet below, on a deep winter-night blue. */
-	background-image:
-		radial-gradient(120% 52% at 50% -10%, rgba(232, 163, 61, 0.22), transparent 58%),
-		radial-gradient(150% 55% at 50% 114%, rgba(150, 208, 255, 0.17), transparent 62%),
-		radial-gradient(70% 28% at 50% 109%, rgba(216, 35, 42, 0.06), transparent 60%),
-		linear-gradient(180deg, #153249 0%, #0e2235 46%, #0a1828 100%);
-	background-attachment: fixed;
+	background: var(--bg);
 }
-/* CRT scanlines + sheen — BEHIND content (z 0) so they show through the
-   translucent panels/background but never sit on top of text. */
+/* The whole atmosphere (winter-night gradient + warm/ice glows + CRT scanlines)
+   lives on a FIXED pseudo-element behind the content — never `background-attachment:
+   fixed`, which doesn't paint on iOS / X's in-app browser. */
 body::before {
 	content: '';
 	position: fixed;
@@ -77,7 +70,11 @@ body::before {
 	pointer-events: none;
 	background-image:
 		repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.11) 0 1px, transparent 1px 3px),
-		repeating-linear-gradient(115deg, rgba(255, 240, 214, 0.015) 0 2px, transparent 2px 7px);
+		repeating-linear-gradient(115deg, rgba(255, 240, 214, 0.015) 0 2px, transparent 2px 7px),
+		radial-gradient(120% 52% at 50% -10%, rgba(232, 163, 61, 0.22), transparent 58%),
+		radial-gradient(150% 55% at 50% 114%, rgba(150, 208, 255, 0.17), transparent 62%),
+		radial-gradient(70% 28% at 50% 109%, rgba(216, 35, 42, 0.06), transparent 60%),
+		linear-gradient(180deg, #153249 0%, #0e2235 46%, #0a1828 100%);
 }
 /* warm tube vignette + faint flicker — on top, but a soft radial that doesn't
    touch readability. */

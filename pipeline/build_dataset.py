@@ -426,6 +426,9 @@ def assemble_stints(rated: list[dict], names: dict[str, str]) -> dict:
             "conf": round(min(s["conf"] for s in seasons), 2), "stats": stats,
         })
 
+    # an "era" should be a real tenure, not a one-season cameo with a random team
+    stints = [s for s in stints if s["ns"] >= 2]
+
     # cap per (team, decade, group) to keep the pool sharp
     CAPS = {"F": 10, "D": 6, "G": 4}
     buckets: dict[tuple, list[dict]] = defaultdict(list)
