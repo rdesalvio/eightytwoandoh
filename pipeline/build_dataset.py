@@ -34,11 +34,13 @@ TARGET_APG = 10.0  # 1.67 assists/goal
 # the JS engine and the Python tuner share one source of truth.
 AXES_ORDER = ["scoring", "playmaking", "twoway", "goaltending", "durability"]
 SLOTS = ["F", "F", "F", "D", "D", "G"]
+# "twoway" is the DEFENSE axis: driven only by the defensemen (forwards aren't
+# judged on something the historical data can't measure).
 ENGINE_WEIGHTS = {
-    "C": {"scoring": 1.15, "playmaking": 1.20, "twoway": 0.30, "goaltending": 0, "durability": 1.0},
-    "L": {"scoring": 1.00, "playmaking": 1.00, "twoway": 0.25, "goaltending": 0, "durability": 1.0},
-    "R": {"scoring": 1.00, "playmaking": 1.00, "twoway": 0.25, "goaltending": 0, "durability": 1.0},
-    "D": {"scoring": 0.50, "playmaking": 0.70, "twoway": 1.60, "goaltending": 0, "durability": 1.0},
+    "C": {"scoring": 1.15, "playmaking": 1.20, "twoway": 0, "goaltending": 0, "durability": 1.0},
+    "L": {"scoring": 1.00, "playmaking": 1.00, "twoway": 0, "goaltending": 0, "durability": 1.0},
+    "R": {"scoring": 1.00, "playmaking": 1.00, "twoway": 0, "goaltending": 0, "durability": 1.0},
+    "D": {"scoring": 0.50, "playmaking": 0.70, "twoway": 1.00, "goaltending": 0, "durability": 1.0},
     "G": {"scoring": 0, "playmaking": 0, "twoway": 0, "goaltending": 1.0, "durability": 1.0},
 }
 GAMES = 16  # 16 wins lift the Stanley Cup (4 playoff rounds x 4 wins)
@@ -368,8 +370,8 @@ def build():
 
 def _overall(grp: str, axes: dict) -> int:
     if grp == "F":
-        return round(0.42 * axes["scoring"] + 0.40 * axes["playmaking"]
-                     + 0.10 * axes["twoway"] + 0.08 * axes["durability"])
+        # forwards are valued on offense + availability, not "defense"
+        return round(0.45 * axes["scoring"] + 0.42 * axes["playmaking"] + 0.13 * axes["durability"])
     if grp == "D":
         return round(0.20 * axes["scoring"] + 0.28 * axes["playmaking"]
                      + 0.42 * axes["twoway"] + 0.10 * axes["durability"])

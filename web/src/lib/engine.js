@@ -57,8 +57,13 @@ export function projectRecord(roster, engine) {
 	const wins = filled.length === 6 ? Math.round(exact) : Math.floor(exact);
 	const losses = games - wins;
 
-	let weakest = engine.axes[0];
-	for (const k of engine.axes) if (axesObj[k] < axesObj[weakest]) weakest = k;
+	// "weakest link" = lowest of the full-weight axes only; durability is a
+	// downweighted bonus, so it shouldn't keep getting flagged as the cap.
+	let weakest = null;
+	for (const k of engine.axes) {
+		if ((engine.axisWeights?.[k] ?? 1) < 1) continue;
+		if (weakest === null || axesObj[k] < axesObj[weakest]) weakest = k;
+	}
 
 	return {
 		axes: axesObj,
@@ -77,7 +82,7 @@ export function projectRecord(roster, engine) {
 export const AXIS_LABELS = {
 	scoring: 'Scoring',
 	playmaking: 'Playmaking',
-	twoway: 'Two-Way',
+	twoway: 'Defense',
 	goaltending: 'Goaltending',
 	durability: 'Durability'
 };

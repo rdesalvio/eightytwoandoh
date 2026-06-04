@@ -14,11 +14,10 @@ export function archetype(p) {
 		if (a.twoway >= 85) return 'Shutdown D';
 		return 'Two-Way D';
 	}
-	// forwards
+	// forwards — valued on offense, never judged on "defense"
 	if (a.scoring >= 88 && a.playmaking >= 88) return 'Superstar';
 	if (a.scoring - a.playmaking >= 12) return 'Sniper';
 	if (a.playmaking - a.scoring >= 12) return 'Playmaker';
-	if (a.twoway >= 80) return 'Two-Way Forward';
 	if (a.durability >= 88) return 'Workhorse';
 	return 'Scorer';
 }

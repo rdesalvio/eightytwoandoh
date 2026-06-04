@@ -4,7 +4,7 @@
 	const CATS = [
 		['Scoring', 'Goals', 'Forwards'],
 		['Playmaking', 'Assists', 'Forwards & puck-moving D'],
-		['Two-Way', 'Defensive game', 'Defensemen'],
+		['Defense', 'Your defensemen vs their peers', 'Defensemen'],
 		['Goaltending', 'Goalie quality vs his era', 'Your goalie'],
 		['Durability', 'Games played & longevity', 'Everyone · counts least']
 	];
@@ -54,10 +54,10 @@
 		{/each}
 	</div>
 	<p class="note">
-		Your team’s mark in a category is your players’ <b>position-weighted average</b> — a defenseman
-		counts most for Two-Way, your goalie owns Goaltending. Your record blends them, and your
-		<b>lowest</b> drags hardest, so chase <b>balance</b>, not just scoring. (Durability is weighted
-		lightest — a fun bonus, not the main event.)
+		Each group is judged on its own job — forwards on Scoring &amp; Playmaking, your two
+		defensemen on Defense, your goalie on Goaltending; everyone shares Durability. Your record
+		blends all five and your <b>lowest</b> drags hardest, so chase <b>balance</b>, not just scoring.
+		(Durability is weighted lightest — a fun bonus, not the main event.)
 	</p>
 </section>
 
