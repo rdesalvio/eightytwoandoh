@@ -52,20 +52,21 @@ await page.waitForSelector('.resultcard', { timeout: 5000 });
 await sleep(500);
 await shot('4-result');
 
-// verify the SHARE image actually rasterizes the radar (the mobile-black bug)
+// render the canvas share card (dev hook) and save it so we can eyeball it
 try {
-	await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js' });
-	const dataUrl = await page.evaluate(
-		async () =>
-			await window.htmlToImage.toPng(document.querySelector('.resultcard'), {
-				pixelRatio: 2,
-				backgroundColor: '#0b1120'
-			})
-	);
-	fs.writeFileSync(`${OUT}/share-capture.png`, Buffer.from(dataUrl.split(',')[1], 'base64'));
-	console.log('share-capture saved (verifies radar rasterizes)');
+	await page.waitForFunction(() => typeof window.__shareCard === 'function', { timeout: 5000 });
+	const dataUrl = await page.evaluate(async () => {
+		const blob = await window.__shareCard();
+		return await new Promise((r) => {
+			const fr = new FileReader();
+			fr.onload = () => r(fr.result);
+			fr.readAsDataURL(blob);
+		});
+	});
+	fs.writeFileSync(`${OUT}/share-card.png`, Buffer.from(dataUrl.split(',')[1], 'base64'));
+	console.log('share-card rendered');
 } catch (e) {
-	console.log('share-capture FAILED:', e.message);
+	console.log('share-card FAILED:', e.message);
 }
 
 // verify "Draft again" actually restarts a draft (was a no-op bug)

@@ -1,5 +1,5 @@
 <script>
-	let { url, text, target } = $props();
+	let { url, makeImage } = $props();
 	let copied = $state(false);
 	let busy = $state(false);
 
@@ -9,21 +9,34 @@
 			copied = true;
 			setTimeout(() => (copied = false), 1600);
 		} catch {
-			/* clipboard blocked — ignore */
+			/* clipboard blocked */
 		}
 	}
 
+	// Link share, no text — the link's own preview card does the talking.
+	async function shareLink() {
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: 'Chase The Cup', url });
+				return;
+			} catch {
+				/* cancelled */
+				return;
+			}
+		}
+		copyLink();
+	}
+
+	// Image + link (no text blurb).
 	async function shareImage() {
-		const node = typeof target === 'function' ? target() : target;
-		if (!node || busy) return;
+		if (busy) return;
 		busy = true;
 		try {
-			const { toBlob } = await import('html-to-image');
-			const blob = await toBlob(node, { pixelRatio: 2, backgroundColor: '#0b1120' });
+			const blob = await makeImage();
 			if (!blob) return;
 			const file = new File([blob], 'chase-the-cup.png', { type: 'image/png' });
 			if (navigator.canShare?.({ files: [file] })) {
-				await navigator.share({ files: [file], text, url });
+				await navigator.share({ files: [file], url });
 			} else {
 				const a = document.createElement('a');
 				a.href = URL.createObjectURL(blob);
@@ -32,26 +45,28 @@
 				URL.revokeObjectURL(a.href);
 			}
 		} catch {
-			/* user cancelled or unsupported */
+			/* cancelled / unsupported */
 		} finally {
 			busy = false;
 		}
 	}
 
 	const enc = encodeURIComponent;
+	// link-only social intents (no text)
 	let links = $derived({
-		x: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`,
-		bsky: `https://bsky.app/intent/compose?text=${enc(text + ' ' + url)}`,
-		wa: `https://wa.me/?text=${enc(text + ' ' + url)}`
+		x: `https://twitter.com/intent/tweet?url=${enc(url)}`,
+		bsky: `https://bsky.app/intent/compose?text=${enc(url)}`,
+		wa: `https://wa.me/?text=${enc(url)}`
 	});
 </script>
 
 <div class="share">
 	<button class="btn primary" onclick={shareImage} disabled={busy}>
-		{busy ? 'Rendering…' : '📸 Share as image'}
+		{busy ? 'Rendering…' : '📸 Share image'}
 	</button>
 	<div class="row">
-		<button class="btn" onclick={copyLink}>{copied ? '✓ Copied link' : '🔗 Copy link'}</button>
+		<button class="btn" onclick={shareLink}>🔗 Share link</button>
+		<button class="btn" onclick={copyLink}>{copied ? '✓ Copied' : 'Copy'}</button>
 	</div>
 	<div class="socials">
 		<a class="btn sm ghost" href={links.x} target="_blank" rel="noopener">X</a>
@@ -65,6 +80,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+	}
+	.row .btn {
+		flex: 1;
 	}
 	.socials {
 		display: flex;

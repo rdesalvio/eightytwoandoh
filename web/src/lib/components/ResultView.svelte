@@ -2,6 +2,7 @@
 	import { engine, encodeRoster } from '$lib/pool.js';
 	import { projectRecord, AXIS_LABELS } from '$lib/engine.js';
 	import { archetype } from '$lib/archetype.js';
+	import { renderShareCard } from '$lib/shareCard.js';
 	import Radar from './Radar.svelte';
 	import GradeBadge from './GradeBadge.svelte';
 	import ShareBar from './ShareBar.svelte';
@@ -9,22 +10,19 @@
 	let { roster, infoMode = 'classic', shared = false } = $props();
 
 	let result = $derived(projectRecord(roster, engine));
-	let card = $state(null);
 	let origin = $state('');
 	$effect(() => {
 		origin = window.location.origin;
 	});
+	$effect(() => {
+		if (import.meta.env.DEV) window.__shareCard = () => renderShareCard(result, roster);
+	});
 
 	let shareUrl = $derived(`${origin}/r/${encodeRoster(roster, infoMode)}`);
-	let shareText = $derived(
-		result.perfect
-			? `I swept the playoffs 16-0 and won the Cup on Chase The Cup 🏒🏆 Can you?`
-			: `My all-time six went ${result.record} (${result.grade} · ${result.label}) on Chase The Cup 🏒 Can you win the Cup?`
-	);
 </script>
 
 <div class="result fadeUp">
-	<div class="card resultcard" bind:this={card}>
+	<div class="card resultcard">
 		<div class="masthead">
 			<span class="rule"></span>
 			<span class="brand chrome">Chase The Cup</span>
@@ -55,7 +53,7 @@
 	</div>
 
 	<div class="actions stack">
-		<ShareBar url={shareUrl} text={shareText} target={() => card} />
+		<ShareBar url={shareUrl} makeImage={() => renderShareCard(result, roster)} />
 		{#if shared}
 			<a class="btn" href="/">🏒 Build your own six</a>
 		{:else}
