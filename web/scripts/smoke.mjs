@@ -4,6 +4,9 @@ import puppeteer from 'puppeteer-core';
 import lz from 'lz-string';
 
 const BASE = process.argv[2] || process.env.BASE || 'http://localhost:5179';
+// Remote deployments are slower (network + Google Fonts CDN) — give selector/hook
+// waits more headroom so a live check doesn't false-fail on latency.
+const TO = /localhost|127\.0\.0\.1/.test(BASE) ? 5000 : 20000;
 const OUT = '/tmp/e82o';
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -42,31 +45,41 @@ await page.click('.btn.primary.big');
 await page.waitForFunction(() => location.pathname === '/play');
 // 6 picks
 for (let i = 0; i < 6; i++) {
-	await page.waitForSelector('.pick', { timeout: 5000 });
+	await page.waitForSelector('.pick', { timeout: TO });
 	if (i === 1) await shot('3-draft-forwards');
 	if (i === 4) await shot('3b-draft-dg');
 	await page.$$eval('.pick', (b) => b[0].click());
 	await sleep(800); // spin + render next round
 }
-await page.waitForSelector('.resultcard', { timeout: 5000 });
+await page.waitForSelector('.resultcard', { timeout: TO });
 await sleep(500);
 await shot('4-result');
 
-// render the canvas share card (dev hook) and save it so we can eyeball it
-try {
-	await page.waitForFunction(() => typeof window.__shareCard === 'function', { timeout: 5000 });
-	const dataUrl = await page.evaluate(async () => {
-		const blob = await window.__shareCard();
-		return await new Promise((r) => {
-			const fr = new FileReader();
-			fr.onload = () => r(fr.result);
-			fr.readAsDataURL(blob);
+// render the canvas share card and save it so we can eyeball it. The render entry
+// point window.__shareCard is a DEV-ONLY hook (import.meta.env.DEV in ResultView),
+// so it's absent on a production build — that's expected, not a failure. The real
+// in-app Share button calls renderShareCard() directly and is exercised in dev runs.
+const hasShareHook = await page
+	.waitForFunction(() => typeof window.__shareCard === 'function', { timeout: 6000 })
+	.then(() => true)
+	.catch(() => false);
+if (!hasShareHook) {
+	console.log('share-card: dev-only hook absent (prod build) — skipped, verify on a dev run');
+} else {
+	try {
+		const dataUrl = await page.evaluate(async () => {
+			const blob = await window.__shareCard();
+			return await new Promise((r) => {
+				const fr = new FileReader();
+				fr.onload = () => r(fr.result);
+				fr.readAsDataURL(blob);
+			});
 		});
-	});
-	fs.writeFileSync(`${OUT}/share-card.png`, Buffer.from(dataUrl.split(',')[1], 'base64'));
-	console.log('share-card rendered');
-} catch (e) {
-	console.log('share-card FAILED:', e.message);
+		fs.writeFileSync(`${OUT}/share-card.png`, Buffer.from(dataUrl.split(',')[1], 'base64'));
+		console.log('share-card rendered ✓');
+	} catch (e) {
+		console.log('share-card FAILED:', e.message);
+	}
 }
 
 // verify "Draft again" actually restarts a draft (was a no-op bug)
@@ -74,7 +87,7 @@ await page.evaluate(() => {
 	const b = [...document.querySelectorAll('button.btn')].find((x) => /Draft again/i.test(x.textContent));
 	b && b.click();
 });
-await page.waitForSelector('.pick', { timeout: 8000 });
+await page.waitForSelector('.pick', { timeout: TO });
 console.log('draft-again: new draft started ✓');
 
 // 3. how-to-play
@@ -89,7 +102,7 @@ const code = lz.compressToEncodedURIComponent(
 	JSON.stringify({ m: 0, r: roster.map((p) => [p.id, p.team, p.decade]) })
 );
 await page.goto(`${BASE}/r/${code}`, { waitUntil: 'networkidle0' });
-await page.waitForSelector('.resultcard', { timeout: 5000 });
+await page.waitForSelector('.resultcard', { timeout: TO });
 await shot('6-shared');
 const sharedRecord = await page.$eval('.record', (e) => e.textContent);
 console.log('shared decoded record:', sharedRecord);
